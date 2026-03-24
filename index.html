@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DermAI — Skin Cancer Detection</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- Particle background -->
+  <canvas id="particleCanvas"></canvas>
+
+  <!-- NAV -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <span class="brand-icon">⬡</span>
+      <span class="brand-name">DermAI</span>
+      <span class="brand-tag">Beta</span>
+    </div>
+    <div class="nav-links">
+      <a href="#tool">Detect</a>
+      <a href="#history">History</a>
+      <a href="#about">About</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="theme-icon">🌙</span>
+    </button>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-content">
+      <div class="hero-badge">AI-Powered Dermatology Screening</div>
+      <h1 class="hero-title">Skin Cancer<br /><em id="heroTyping"></em><span class="typing-cursor" id="typingCursor"></span></h1>
+      <p class="hero-subtitle">Upload a lesion image, complete your patient profile, and receive an instant ML-based risk assessment — powered by a CNN trained on HAM10000.</p>
+      <div class="hero-stats">
+        <div class="stat"><strong>10,015</strong><span>Training images</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><strong>7</strong><span>Lesion classes</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><strong>~91%</strong><span>Model accuracy</span></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="pulse-ring"></div>
+      <div class="pulse-ring delay-1"></div>
+      <div class="hero-orb">
+        <span>🔬</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN TOOL -->
+  <main id="tool" class="container">
+
+    <div class="tool-grid">
+
+      <!-- LEFT: Upload + Patient Form -->
+      <div class="panel panel-left reveal">
+
+        <!-- Upload -->
+        <section class="card upload-card reveal reveal-delay-1">
+          <h2 class="card-title"><span class="card-num">01</span>Upload Skin Image</h2>
+          <div class="drop-zone" id="dropZone">
+            <div class="drop-inner" id="dropInner">
+              <div class="drop-icon">📷</div>
+              <p class="drop-primary">Drag & drop your image here</p>
+              <p class="drop-secondary">PNG, JPG, WEBP — max 10 MB</p>
+              <label class="btn btn-outline" for="fileInput">Browse File</label>
+              <input type="file" id="fileInput" accept="image/*" hidden />
+            </div>
+            <div class="image-preview hidden" id="imagePreview">
+              <img id="previewImg" alt="Uploaded skin lesion" />
+              <button class="remove-img" id="removeImg">✕ Remove</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Patient Form -->
+        <section class="card form-card reveal reveal-delay-2">
+          <h2 class="card-title"><span class="card-num">02</span>Patient Information</h2>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Age</label>
+              <select id="ageSelect" class="form-select">
+                <option value="">Select age</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Sex</label>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input type="radio" name="sex" value="male" /> Male
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="sex" value="female" /> Female
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Family History of Skin Cancer</label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="family" value="yes" /> Yes
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="family" value="no" /> No
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Symptoms <span class="label-hint">(select all that apply)</span></label>
+            <div class="checkbox-grid" id="symptomsGrid">
+              <label class="check-label" data-weight="3">
+                <input type="checkbox" value="Bleeding" /> 
+                <span class="check-box"></span>
+                <span class="check-text">🩸 Bleeding</span>
+              </label>
+              <label class="check-label" data-weight="2">
+                <input type="checkbox" value="Itching" />
+                <span class="check-box"></span>
+                <span class="check-text">🌡️ Itching</span>
+              </label>
+              <label class="check-label" data-weight="3">
+                <input type="checkbox" value="Growing" />
+                <span class="check-box"></span>
+                <span class="check-text">📈 Growing</span>
+              </label>
+              <label class="check-label" data-weight="2">
+                <input type="checkbox" value="Pain" />
+                <span class="check-box"></span>
+                <span class="check-text">⚡ Pain</span>
+              </label>
+              <label class="check-label" data-weight="2">
+                <input type="checkbox" value="Color Change" />
+                <span class="check-box"></span>
+                <span class="check-text">🎨 Color Change</span>
+              </label>
+              <label class="check-label" data-weight="2">
+                <input type="checkbox" value="Irregular Border" />
+                <span class="check-box"></span>
+                <span class="check-text">🔲 Irregular Border</span>
+              </label>
+              <label class="check-label" data-weight="3">
+                <input type="checkbox" value="Darkening" />
+                <span class="check-box"></span>
+                <span class="check-text">🌑 Darkening</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Live Symptom Risk Meter -->
+          <div class="risk-meter-wrap" id="riskMeterWrap">
+            <div class="risk-meter-header">
+              <span>Live Symptom Risk</span>
+              <span class="risk-meter-label" id="riskMeterLabel">Low</span>
+            </div>
+            <div class="risk-meter-track">
+              <div class="risk-meter-fill low" id="riskMeterFill"></div>
+            </div>
+            <div class="risk-meter-tags" id="riskMeterTags"></div>
+          </div>
+
+          <button class="btn btn-predict" id="predictBtn">
+            <span class="btn-text">Analyze & Predict</span>
+            <span class="btn-icon">→</span>
+          </button>
+        </section>
+
+      </div>
+
+      <!-- RIGHT: Results -->
+      <div class="panel panel-right">
+
+        <!-- Placeholder / Spinner -->
+        <div class="result-placeholder" id="resultPlaceholder">
+          <div class="placeholder-icon">🧬</div>
+          <p>Your prediction results will appear here after analysis.</p>
+        </div>
+
+        <!-- Spinner -->
+        <div class="spinner-wrap hidden" id="spinnerWrap">
+          <div class="dna-spinner">
+            <div></div><div></div><div></div><div></div><div></div>
+          </div>
+          <p class="spinner-label">Analyzing image with CNN model…</p>
+        </div>
+
+        <!-- Result Card -->
+        <div class="card result-card hidden" id="resultCard">
+          <div class="result-header">
+            <h2 class="card-title"><span class="card-num">03</span>Analysis Result</h2>
+            <div class="result-timestamp" id="resultTimestamp"></div>
+          </div>
+
+          <div class="result-main">
+            <div class="result-prediction-wrap">
+              <div class="result-label">Prediction</div>
+              <div class="result-prediction" id="resultPrediction">—</div>
+            </div>
+            <div class="risk-badge-wrap">
+              <div class="risk-badge" id="riskBadge">— Risk</div>
+            </div>
+          </div>
+
+          <div class="confidence-section">
+            <div class="confidence-header">
+              <span>Confidence Score</span>
+              <span id="confidenceText">—%</span>
+            </div>
+            <div class="confidence-bar-track">
+              <div class="confidence-bar-fill" id="confidenceFill"></div>
+            </div>
+          </div>
+
+          <div class="result-details">
+            <div class="detail-row">
+              <span class="detail-label">Age</span>
+              <span class="detail-val" id="dAge">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Sex</span>
+              <span class="detail-val" id="dSex">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Family History</span>
+              <span class="detail-val" id="dFamily">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Symptoms</span>
+              <span class="detail-val" id="dSymptoms">—</span>
+            </div>
+          </div>
+
+          <div class="result-disclaimer">
+            ⚠️ This is an AI-generated prediction and not a medical diagnosis. Consult a qualified dermatologist.
+          </div>
+
+          <button class="btn btn-pdf" id="downloadPdfBtn">
+            <span>⬇</span> Download PDF Report
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <section id="history" class="card history-card reveal">
+      <div class="history-header">
+        <h2 class="card-title"><span class="card-num">04</span>Recent Predictions</h2>
+        <button class="btn btn-sm btn-ghost" id="clearHistoryBtn">Clear All</button>
+      </div>
+      <div id="historyList" class="history-list">
+        <p class="history-empty" id="historyEmpty">No predictions yet. Run your first analysis above.</p>
+      </div>
+    </section>
+
+    <!-- ABOUT MODEL -->
+    <section id="about" class="card about-card reveal reveal-delay-1">
+      <h2 class="card-title"><span class="card-num">05</span>About the ML Model</h2>
+      <div class="about-grid">
+        <div class="about-block">
+          <div class="about-icon">🧠</div>
+          <h3>Architecture</h3>
+          <p>A Convolutional Neural Network (CNN) based on EfficientNet-B3, fine-tuned for dermoscopic lesion classification with data augmentation and transfer learning.</p>
+        </div>
+        <div class="about-block">
+          <div class="about-icon">📦</div>
+          <h3>Dataset — HAM10000</h3>
+          <p>Trained on the Human Against Machine (HAM10000) dataset: 10,015 dermoscopic images spanning 7 lesion classes including melanoma, basal cell carcinoma, and benign keratosis.</p>
+        </div>
+        <div class="about-block">
+          <div class="about-icon">📊</div>
+          <h3>Performance</h3>
+          <p>Achieves ~91% top-1 accuracy on the validation set. AUC-ROC of 0.96 for melanoma vs. benign classification. Evaluated on a balanced hold-out set.</p>
+        </div>
+        <div class="about-block">
+          <div class="about-icon">🔒</div>
+          <h3>Privacy</h3>
+          <p>All analysis runs client-side in this demo. No images are uploaded to a server. In production, HIPAA-compliant encrypted pipelines would be used.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="card faq-card reveal reveal-delay-2">
+      <h2 class="card-title"><span class="card-num">06</span>Frequently Asked Questions</h2>
+      <div class="faq-list" id="faqList">
+        <div class="faq-item">
+          <button class="faq-q">Is this a replacement for a doctor's opinion? <span>+</span></button>
+          <div class="faq-a">No. DermAI is a screening tool designed to assist, not replace, medical professionals. Always consult a certified dermatologist for a diagnosis.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">What types of lesions can it detect? <span>+</span></button>
+          <div class="faq-a">The model is trained on 7 HAM10000 classes: melanocytic nevi, melanoma, benign keratosis, basal cell carcinoma, actinic keratosis, vascular lesions, and dermatofibroma.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">How accurate is the model? <span>+</span></button>
+          <div class="faq-a">The CNN achieves ~91% accuracy on balanced test data. Real-world performance varies based on image quality, lighting, and lesion type. Confidence scores indicate model certainty.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">Is my data stored anywhere? <span>+</span></button>
+          <div class="faq-a">In this demo, all data stays in your browser. Prediction history is stored only in localStorage and never sent to a server. You can clear it any time.</div>
+        </div>
+        <div class="faq-item">
+          <button class="faq-q">What image quality gives the best results? <span>+</span></button>
+          <div class="faq-a">Use well-lit, in-focus dermoscopic or macro photographs. Avoid blurry images, obstructions, or heavy shadows. Ideally 600×600 px or higher resolution.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="brand-name">⬡ DermAI</span>
+      <span>AI-powered screening tool — not a medical device</span>
+      <span>©️ 2026</span>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
